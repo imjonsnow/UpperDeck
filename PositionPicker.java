@@ -1,8 +1,17 @@
 import java.awt.*;
 import java.awt.event.*;
+
 import javax.swing.*;
 
-public class PositionPicker extends JPanel{
+import java.sql.*;
+import java.util.ArrayList;
+import java.io.Console;
+
+public class PositionPicker extends JPanel
+{
+	public ArrayList<JCheckBox> checkBoxes;
+	static String baseQuery = "select * from player where position.position_id = ";
+	static boolean runClicked = false;
 	static JFrame frame;
 	static String qbString = "QB";
 	static String rbString = "RB";
@@ -11,8 +20,9 @@ public class PositionPicker extends JPanel{
 	static String dString = "D/ST";
 	static String wrString = "WR";
 	static JPanel panel = new JPanel();
+	static String season;
 	
-	//initiate checkboxes
+	//initiate checkboxes - add every stat to a checkbox
 	static JCheckBox rushTDs;
 	static JCheckBox rushYards;
 	static JCheckBox passYards;
@@ -33,12 +43,9 @@ public class PositionPicker extends JPanel{
 	static JCheckBox touches;
 	static JCheckBox compRate;
 	static JCheckBox catchRate;
-	static JCheckBox FGM;
-	static JCheckBox FGA;
-	static JCheckBox EPM;
-	static JCheckBox EPA;
+	static JCheckBox FGR;
+	static JCheckBox EPR;
 	static JCheckBox fgRate;
-	//D/ST stats
 	static JCheckBox sacks;
 	static JCheckBox fumblesRecovered;
 	static JCheckBox interceptions;
@@ -50,16 +57,37 @@ public class PositionPicker extends JPanel{
 	static JCheckBox kickReturns;
 	static JCheckBox turnoversForced;
 	static JCheckBox yardsAllowedPG;
+	
+	//initialize drop-down list for seasons
+	static JComboBox dropMenu = new JComboBox();
+		
+	//enumerate seasons
+	private String[] seasons = { "Season","2010", "2011", "2012", "2013", "2014" };
+	
+	//initialize boxes for user interface
 	static Box positionBox = Box.createVerticalBox();
 	static Box statBox = Box.createVerticalBox();
+	static Box goBox = Box.createHorizontalBox();
 	
+	//initialize buttons
 	static JButton goButton;
 
-	
 	public PositionPicker(){
-		
 		super(true);
 		
+		//set size of drop menu
+		dropMenu.setMaximumSize(dropMenu.getPreferredSize());
+		
+		//add seasons to menu and add listener
+		for (int i = 0; i <= 5; i++){
+			dropMenu.addItem(seasons[i]);
+		}
+		
+		//initialize menuListener and add to dropMenu
+		DropMenuListener menuListener = new DropMenuListener();
+		dropMenu.addActionListener(menuListener);
+		
+		//set panel
 		panel.setPreferredSize(new Dimension(700, 610));
 		panel.setLayout(new GridBagLayout());
 	
@@ -99,6 +127,7 @@ public class PositionPicker extends JPanel{
 		positionBox.add(dButton);
 		
 		//create stat type check buttons
+		//TO-DO: The strings in JCheckBox param need to match the fields in our SQL database
 		rushYards = new JCheckBox("Rushing Yards");
 		passYards = new JCheckBox("Passing Yards");
 		rushTDs = new JCheckBox("Rushing TDs");
@@ -119,10 +148,8 @@ public class PositionPicker extends JPanel{
 		touches = new JCheckBox("Touches");
 		compRate = new JCheckBox("Completion Rate");
 		catchRate = new JCheckBox("Catch Rate");
-		FGM = new JCheckBox("Field Goals Made");
-		FGA = new JCheckBox("Field Goals Attempted");
-		EPM = new JCheckBox("Extra Points Made");
-		EPA = new JCheckBox("Extra Points Attempted");
+		FGR = new JCheckBox("Field Goal Rate");
+		EPR = new JCheckBox("Extra Point Rate");
 		fgRate = new JCheckBox("Field Goal Rate");
 		sacks = new JCheckBox("Sacks");
 		fumblesRecovered = new JCheckBox("Fumbles Recovered");
@@ -135,6 +162,42 @@ public class PositionPicker extends JPanel{
 		kickReturns = new JCheckBox("Kickoffs Returned For TDs");
 		turnoversForced = new JCheckBox("Turnovers Forced");
 		yardsAllowedPG = new JCheckBox("Yards Allowed Per Game");
+		
+		//add each checkbox to arrayList
+		checkBoxes = new ArrayList<JCheckBox>();
+		checkBoxes.add(rushTDs);
+		checkBoxes.add(rushYards);
+		checkBoxes.add(passYards);
+		checkBoxes.add(gamesPlayed);
+		checkBoxes.add(targets);
+		checkBoxes.add(receptions);
+		checkBoxes.add(recYards);
+		checkBoxes.add(totalYards);
+		checkBoxes.add(tdTotal);
+		checkBoxes.add(turnovers);
+		checkBoxes.add(rating);
+		checkBoxes.add(fantasyPoints);
+		checkBoxes.add(ffppg);
+		checkBoxes.add(completions);
+		checkBoxes.add(passAttempts);
+		checkBoxes.add(passTDs);
+		checkBoxes.add(intThrown);
+		checkBoxes.add(touches);
+		checkBoxes.add(compRate);
+		checkBoxes.add(EPR);
+		checkBoxes.add(FGR);
+		checkBoxes.add(fgRate);
+		checkBoxes.add(sacks);
+		checkBoxes.add(fumblesRecovered);
+		checkBoxes.add(interceptions);
+		checkBoxes.add(dTD);
+		checkBoxes.add(PA);
+		checkBoxes.add(passYardsPG);
+		checkBoxes.add(rushYardsPG);
+		checkBoxes.add(safety);
+		checkBoxes.add(kickReturns);
+		checkBoxes.add(turnoversForced);
+		checkBoxes.add(yardsAllowedPG);
 		
 		//create QB stat box (use as default)
 		statBox.setBorder(BorderFactory.createTitledBorder("QB Stats"));
@@ -153,26 +216,122 @@ public class PositionPicker extends JPanel{
 		statBox.add(ffppg);
 		statBox.add(rating);
 		
+		//initialize checkbox listener
+		CheckBoxListener produceStats = new CheckBoxListener();
+		
+		//add itemListener to all stat checkboxes
+		for (JCheckBox obj: checkBoxes)
+		{
+			obj.addItemListener(produceStats);
+		}
+		
+		//create goButton and add listener
+		goButton = new JButton("Go!");
+		RunButtonListener executeQuery = new RunButtonListener();
+		goButton.addActionListener(executeQuery);
+		
+		//add season menu and go button to one box
+		goBox.setAlignmentX(LEFT_ALIGNMENT);
+		goBox.add(Box.createVerticalStrut(10));
+		goBox.add(Box.createRigidArea(new Dimension(0,50)));
+		goBox.add(dropMenu);
+		goBox.add(Box.createRigidArea(new Dimension(10,0)));
+		goBox.add(goButton);
+		goBox.add(Box.createRigidArea(new Dimension(10,0)));
+		
+	
 		//stuff all boxes into one vertical box, forming left side of interface
 		Box container = Box.createVerticalBox();
 		container.setBorder(BorderFactory.createTitledBorder("Settings"));
 		container.add(positionBox);
 		container.add(statBox);
-		goButton = new JButton("Go!");
-		container.add(goButton);
+		container.add(goBox);
 		container.add(Box.createVerticalStrut(20));
 		container.add(Box.createRigidArea(new Dimension(0,300)));
+		
+		//add the container box containing all boxes to panel
 		addItem(panel, container, 0, 0, 0, 0, GridBagConstraints.WEST);
 		
-		
-		
+		//add panel to frame
 		add(panel);
 	}
+	
+	/**
+	 * 
+	 * This class is the item listener for the checkboxes. This will feed information into the query to be executed.
+	 *
+	 */
+	class DropMenuListener implements ActionListener
+	{
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			season = dropMenu.getSelectedItem().toString();
+			if (isNumeric(season)){
+			System.out.println(season);
+			}
+			
+		}
+	}
+	
+	/**
+	 * 
+	 * This class is the item listener for the checkboxes. This will feed information into the query to be executed.
+	 *
+	 */
+	class CheckBoxListener implements ItemListener
+	{
+		public void itemStateChanged(ItemEvent ie) {
+			
+			JCheckBox cb = (JCheckBox) ie.getItem();
+			if (ie.getStateChange() == ItemEvent.SELECTED){
+				//System.out.println(cb.getText() + " selected.");
+				cb.setEnabled(false);
+			}
+		}
+	}
+	
+	/**
+	 * 
+	 * This class is the action listener for the Go! button, which will execute the query and clear the checkboxes
+	 *
+	 */
+	class RunButtonListener implements ActionListener
+	{
+		public void actionPerformed(ActionEvent e)
+		{
+			for (JCheckBox obj: checkBoxes)
+			{
+				obj.setSelected(false);
+				obj.setEnabled(true);
+			}
+			frame.validate();
+		}
+	}
+	
+	/**
+	 * 
+	 * This class is the action listener for the position radio buttons
+	 *
+	 */
 	class RadioListener implements ActionListener
 	{
 		public void actionPerformed(ActionEvent e)
 		{
-			if (e.getActionCommand() == qbString){
+			if (e.getActionCommand() == qbString)
+			{
+				//reset query to prevent repeating positions/stats
+				String temp = "select * from player where position.position_id = ";
+				int resetLength = temp.length();
+				baseQuery = baseQuery.substring(0, resetLength);
+				
+				//reset check boxes
+				for (JCheckBox obj: checkBoxes)
+				{
+					obj.setSelected(false);
+					obj.setEnabled(true);
+				}
+				
 				//reset stat box
 				statBox.removeAll();
 				frame.validate();
@@ -194,10 +353,31 @@ public class PositionPicker extends JPanel{
 				statBox.add(ffppg);
 				statBox.add(rating);
 				
-				//update statbox
+				//add position_id to query
+				if (!baseQuery.contains(e.getActionCommand())){
+					baseQuery += e.getActionCommand();
+				}
+				
+				System.out.println(baseQuery);
+				
+				//update frame
 				frame.validate();
 			}
+				
 			if (e.getActionCommand() == wrString){
+				
+				//reset query to prevent repeating positions/stats
+				String temp = "select * from player where position.position_id = ";
+				int resetLength = temp.length();
+				baseQuery = baseQuery.substring(0, resetLength);
+				
+				//reset check boxes
+				for (JCheckBox obj: checkBoxes)
+				{
+					obj.setSelected(false);
+					obj.setEnabled(true);
+				}
+				
 				//reset stat box
 				statBox.removeAll();
 				frame.validate();
@@ -216,10 +396,29 @@ public class PositionPicker extends JPanel{
 				statBox.add(ffppg);
 				statBox.add(rating);
 				
+				//add position_id to query
+				if (!baseQuery.contains(e.getActionCommand())){
+					baseQuery += e.getActionCommand();
+				}
+				
+				System.out.println(baseQuery);
+				
 				//update statbox
 				frame.validate();
 			}
+			
 			if (e.getActionCommand() == dString){
+				//reset query to prevent repeating positions/stats
+				String temp = "select * from player where position.position_id = ";
+				int resetLength = temp.length();
+				baseQuery = baseQuery.substring(0, resetLength);
+				
+				//reset check boxes
+				for (JCheckBox obj: checkBoxes)
+				{
+					obj.setSelected(false);
+					obj.setEnabled(true);
+				}
 				
 				//reset stat box
 				statBox.removeAll();
@@ -242,10 +441,29 @@ public class PositionPicker extends JPanel{
 				statBox.add(ffppg);
 				statBox.add(rating);
 				
+				//add position_id to query
+				if (!baseQuery.contains(e.getActionCommand())){
+					baseQuery += e.getActionCommand();
+				}
+				
+				System.out.println(baseQuery);
+				
 				//update statbox
 				frame.validate();
 			}
+			
 			if (e.getActionCommand() == kString){
+				//reset query to prevent repeating positions/stats
+				String temp = "select * from player where position.position_id = ";
+				int resetLength = temp.length();
+				baseQuery = baseQuery.substring(0, resetLength);
+				
+				//reset check boxes
+				for (JCheckBox obj: checkBoxes)
+				{
+					obj.setSelected(false);
+					obj.setEnabled(true);
+				}
 				
 				//reset stat box
 				statBox.removeAll();
@@ -254,19 +472,35 @@ public class PositionPicker extends JPanel{
 				//create K stat box
 				statBox.setBorder(BorderFactory.createTitledBorder("K Stats"));
 				statBox.add(gamesPlayed);
-				statBox.add(FGM);
-				statBox.add(FGA);
-				statBox.add(EPM);
-				statBox.add(EPA);
+				statBox.add(EPR);
 				statBox.add(fgRate);
 				statBox.add(fantasyPoints);
 				statBox.add(ffppg);
 				statBox.add(rating);
 				
+				//add position_id to query
+				if (!baseQuery.contains(e.getActionCommand())){
+					baseQuery += e.getActionCommand();
+				}
+				
+				System.out.println(baseQuery);
+				
 				//update statbox
 				frame.validate();
 			}
+			
 			if (e.getActionCommand() == teString){
+				//reset query to prevent repeating positions/stats
+				String temp = "select * from player where position.position_id = ";
+				int resetLength = temp.length();
+				baseQuery = baseQuery.substring(0, resetLength);
+				
+				//reset check boxes
+				for (JCheckBox obj: checkBoxes)
+				{
+					obj.setSelected(false);
+					obj.setEnabled(true);
+				}
 				
 				//reset stat box
 				statBox.removeAll();
@@ -286,10 +520,29 @@ public class PositionPicker extends JPanel{
 				statBox.add(ffppg);
 				statBox.add(rating);
 				
+				//add position_id to query
+				if (!baseQuery.contains(e.getActionCommand())){
+					baseQuery += e.getActionCommand();
+				}
+				
+				System.out.println(baseQuery);
+				
 				//update statbox
 				frame.validate();
 			}
+			
 			if (e.getActionCommand() == rbString){
+				//reset query to prevent repeating positions/stats
+				String temp = "select * from player where position.position_id = ";
+				int resetLength = temp.length();
+				baseQuery = baseQuery.substring(0, resetLength);
+				
+				//reset check boxes
+				for (JCheckBox obj: checkBoxes)
+				{
+					obj.setSelected(false);
+					obj.setEnabled(true);
+				}
 				
 				//reset stat box
 				statBox.removeAll();
@@ -297,10 +550,10 @@ public class PositionPicker extends JPanel{
 				
 				//create RB stat box
 				statBox.setBorder(BorderFactory.createTitledBorder("RB Stats"));
+				statBox.add(gamesPlayed);
 				statBox.add(rushYards);
 				statBox.add(rushTDs);
 				statBox.add(passYards);
-				statBox.add(gamesPlayed);
 				statBox.add(targets);
 				statBox.add(receptions);
 				statBox.add(recYards);
@@ -312,12 +565,20 @@ public class PositionPicker extends JPanel{
 				statBox.add(fantasyPoints);
 				statBox.add(ffppg);
 				statBox.add(rating);
+				
+				//add position_id to query
+				if (!baseQuery.contains(e.getActionCommand())){
+					baseQuery += e.getActionCommand();
+				}
+				
+				System.out.println(baseQuery);
+				
 				//update statbox
 				frame.validate();
 			}
-			
 		}
 	}
+	//display window and frame
 	public static void main(String args[]){
 		frame = new JFrame();
 		frame.add(new PositionPicker());
@@ -326,6 +587,8 @@ public class PositionPicker extends JPanel{
 		frame.setTitle("Upper Deck: Taking Fantasy Football To The Next Level");
 		frame.setResizable(false);
 	}
+	
+	//add a componenet to a Panel 
 	private void addItem(JPanel p, JComponent c, int x, int y, int width, int height, int align){
 		GridBagConstraints gc = new GridBagConstraints();
 		gc.gridx = x;
@@ -339,5 +602,35 @@ public class PositionPicker extends JPanel{
 		gc.fill = GridBagConstraints.NONE;
 		p.add(c, gc);
 	}
+	
+    //Establish a connection with specified database. Return connection object
+    private static Connection establish_connection(String database_name, String sql_username, String sql_passwd) 
+    {
+        Connection conn = null;
+        try {
+            
+            System.out.println("Establishing connection with webdev..");
+            conn = DriverManager.getConnection(
+            "jdbc:mysql://webdev.cislabs.uncw.edu/"+database_name+"?user="+sql_username+"&password="+sql_passwd);
+            
+            System.out.println("Connection with webdev.cislabs.uncw.edu established.");
+        }
+        catch (SQLException e) {
+            System.out.println("SQLException: " + e.getMessage());
+            System.out.println("SQLState:     " + e.getSQLState());
+            System.out.println("VendorError:  " + e.getErrorCode());
+        }
+        
+        return conn;
+    }
+    
+    //returns true if numeric
+    public static boolean isNumeric(String str)
+    {
+        for (char c : str.toCharArray())
+        {
+            if (!Character.isDigit(c)) return false;
+        }
+        return true;
+    }
 }
-
