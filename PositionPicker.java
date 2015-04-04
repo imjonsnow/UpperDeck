@@ -88,7 +88,7 @@ public class PositionPicker extends JPanel
 		dropMenu.addActionListener(menuListener);
 		
 		//set panel
-		panel.setPreferredSize(new Dimension(700, 610));
+		panel.setPreferredSize(new Dimension(700, 620));
 		panel.setLayout(new GridBagLayout());
 	
 		//create player type radio buttons
@@ -269,7 +269,10 @@ public class PositionPicker extends JPanel
 			season = dropMenu.getSelectedItem().toString();
 			if (isNumeric(season)){
 			System.out.println(season);
+			dropMenu.setEnabled(false);
+			frame.validate();
 			}
+			
 			
 		}
 	}
@@ -305,6 +308,7 @@ public class PositionPicker extends JPanel
 				obj.setSelected(false);
 				obj.setEnabled(true);
 			}
+			dropMenu.setEnabled(true);
 			frame.validate();
 		}
 	}
