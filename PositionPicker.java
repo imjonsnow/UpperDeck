@@ -9,6 +9,14 @@ import java.io.Console;
 
 public class PositionPicker extends JPanel
 {
+	static JTable playerTable;
+	static JTable statsTable;
+	static JScrollPane playerScroll;
+	static JScrollPane statsScroll;
+	
+	static int width = 700;
+	static int height = 620;
+	
 	public ArrayList<JCheckBox> checkBoxes;
 	static String baseQuery = "select * from player where position.position_id = ";
 	static boolean runClicked = false;
@@ -68,6 +76,8 @@ public class PositionPicker extends JPanel
 	static Box positionBox = Box.createVerticalBox();
 	static Box statBox = Box.createVerticalBox();
 	static Box goBox = Box.createHorizontalBox();
+	static Box playerScrollBox = Box.createVerticalBox();
+	static Box statsScrollBox = Box.createVerticalBox();
 	
 	//initialize buttons
 	static JButton goButton;
@@ -88,7 +98,7 @@ public class PositionPicker extends JPanel
 		dropMenu.addActionListener(menuListener);
 		
 		//set panel
-		panel.setPreferredSize(new Dimension(700, 620));
+		panel.setPreferredSize(new Dimension(width, height));
 		panel.setLayout(new GridBagLayout());
 	
 		//create player type radio buttons
@@ -239,7 +249,22 @@ public class PositionPicker extends JPanel
 		goBox.add(goButton);
 		goBox.add(Box.createRigidArea(new Dimension(10,0)));
 		
-	
+		//test photo
+		Icon image = new ImageIcon("ff.jpg");
+		JLabel label = new JLabel(image);
+		JLabel label2 = new JLabel(image);
+		
+		//add JTables and Scroll Panes
+		playerScroll = new JScrollPane(label); //replace label with JTable
+		playerScroll.setMinimumSize(new Dimension(width/3, height));
+		
+		statsScroll = new JScrollPane(label2); //replace label with JTable
+		statsScroll.setMinimumSize(new Dimension(width/3, height));
+		
+		//These two lines will add the JTables to the ScrollPanes
+		//playerScroll = new JScrollPane(playerTable, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		//statsScroll = new JScrollPane(statsTable, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
 		//stuff all boxes into one vertical box, forming left side of interface
 		Box container = Box.createVerticalBox();
 		container.setBorder(BorderFactory.createTitledBorder("Settings"));
@@ -251,9 +276,26 @@ public class PositionPicker extends JPanel
 		
 		//add the container box containing all boxes to panel
 		addItem(panel, container, 0, 0, 0, 0, GridBagConstraints.WEST);
+		addItem(panel, playerScroll, 0, 0, 0, 0, GridBagConstraints.EAST);
+		addItem(panel, statsScroll, 0, 0, 0, 0, GridBagConstraints.NORTH);
 		
 		//add panel to frame
 		add(panel);
+	}
+
+	//add a componenet to a Panel 
+	private void addItem(JPanel p, JComponent c, int x, int y, int width, int height, int align){
+		GridBagConstraints gc = new GridBagConstraints();
+		gc.gridx = x;
+		gc.gridy = y;
+		gc.gridwidth = width;
+		gc.gridheight = height;
+		gc.weightx = 100.0;
+		gc.weighty = 100.0;
+		gc.insets = new Insets(5, 5, 5, 5);
+		gc.anchor = align;
+		gc.fill = GridBagConstraints.NONE;
+		p.add(c, gc);
 	}
 	
 	/**
@@ -272,8 +314,6 @@ public class PositionPicker extends JPanel
 			dropMenu.setEnabled(false);
 			frame.validate();
 			}
-			
-			
 		}
 	}
 	
@@ -590,21 +630,6 @@ public class PositionPicker extends JPanel
 		frame.setVisible(true);
 		frame.setTitle("Upper Deck: Taking Fantasy Football To The Next Level");
 		frame.setResizable(false);
-	}
-	
-	//add a componenet to a Panel 
-	private void addItem(JPanel p, JComponent c, int x, int y, int width, int height, int align){
-		GridBagConstraints gc = new GridBagConstraints();
-		gc.gridx = x;
-		gc.gridy = y;
-		gc.gridwidth = width;
-		gc.gridheight = height;
-		gc.weightx = 100.0;
-		gc.weighty = 100.0;
-		gc.insets = new Insets(5, 5, 5, 5);
-		gc.anchor = align;
-		gc.fill = GridBagConstraints.NONE;
-		p.add(c, gc);
 	}
 	
     //Establish a connection with specified database. Return connection object
