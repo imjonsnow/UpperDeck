@@ -14,7 +14,7 @@ public class PositionPicker extends JPanel
 	static JScrollPane playerScroll;
 	static JScrollPane statsScroll;
 	
-	static int width = 700;
+	static int width = 900;
 	static int height = 620;
 	
 	public ArrayList<JCheckBox> checkBoxes;
@@ -256,15 +256,22 @@ public class PositionPicker extends JPanel
 		
 		//add JTables and Scroll Panes
 		playerScroll = new JScrollPane(label); //replace label with JTable
-		playerScroll.setMinimumSize(new Dimension(width/3, height));
+		playerScroll.setMinimumSize(new Dimension(width/4, height));
 		
 		statsScroll = new JScrollPane(label2); //replace label with JTable
-		statsScroll.setMinimumSize(new Dimension(width/3, height));
+		statsScroll.setMinimumSize(new Dimension(width/2, height));
 		
+		//add scroll panes to boxes
+		statsScrollBox.add(statsScroll);
+		statsScrollBox.setAlignmentX(LEFT_ALIGNMENT);
+		playerScrollBox.add(playerScroll);
+		
+////
 		//These two lines will add the JTables to the ScrollPanes
 		//playerScroll = new JScrollPane(playerTable, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		//statsScroll = new JScrollPane(statsTable, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-
+////
+		
 		//stuff all boxes into one vertical box, forming left side of interface
 		Box container = Box.createVerticalBox();
 		container.setBorder(BorderFactory.createTitledBorder("Settings"));
@@ -274,10 +281,10 @@ public class PositionPicker extends JPanel
 		container.add(Box.createVerticalStrut(20));
 		container.add(Box.createRigidArea(new Dimension(0,300)));
 		
-		//add the container box containing all boxes to panel
+		//add all components to the panel
 		addItem(panel, container, 0, 0, 0, 0, GridBagConstraints.WEST);
-		addItem(panel, playerScroll, 0, 0, 0, 0, GridBagConstraints.EAST);
-		addItem(panel, statsScroll, 0, 0, 0, 0, GridBagConstraints.NORTH);
+		addItem(panel, playerScrollBox, 0, 0, 0, 0, GridBagConstraints.EAST);
+		addItem(panel, statsScrollBox, 0, 0, 0, 0, GridBagConstraints.NORTH);
 		
 		//add panel to frame
 		add(panel);
