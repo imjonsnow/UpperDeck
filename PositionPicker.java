@@ -31,9 +31,9 @@ public class PositionPicker extends JPanel
 	static String season;
 	
 	//initiate checkboxes - add every stat to a checkbox
-	static JCheckBox rushTDs;
-	static JCheckBox rushYards;
-	static JCheckBox passYards;
+	//static JCheckBox rushTDs;
+	//static JCheckBox rushYards;
+	//static JCheckBox passYards;
 	static JCheckBox gamesPlayed;
 	static JCheckBox targets;
 	static JCheckBox receptions;
@@ -46,7 +46,7 @@ public class PositionPicker extends JPanel
 	static JCheckBox ffppg;
 	static JCheckBox completions;
 	static JCheckBox passAttempts;
-	static JCheckBox passTDs;
+	//static JCheckBox passTDs;
 	static JCheckBox intThrown;
 	static JCheckBox touches;
 	static JCheckBox compRate;
@@ -138,9 +138,9 @@ public class PositionPicker extends JPanel
 		
 		//create stat type check buttons
 		//TO-DO: The strings in JCheckBox param need to match the fields in our SQL database
-		rushYards = new JCheckBox("Rushing Yards");
-		passYards = new JCheckBox("Passing Yards");
-		rushTDs = new JCheckBox("Rushing TDs");
+		//rushYards = new JCheckBox("Rushing Yards");
+		//passYards = new JCheckBox("Passing Yards");
+		//rushTDs = new JCheckBox("Rushing TDs");
 		gamesPlayed = new JCheckBox("Games Played");
 		targets = new JCheckBox("Targets");
 		receptions = new JCheckBox("Receptions");
@@ -153,7 +153,7 @@ public class PositionPicker extends JPanel
 		ffppg = new JCheckBox("Fantasy PPG");
 		completions = new JCheckBox("Completions");
 		passAttempts = new JCheckBox("Pass Attempts");
-		passTDs = new JCheckBox("Passing TDs");
+		//passTDs = new JCheckBox("Passing TDs");
 		intThrown = new JCheckBox("Interceptions Thrown");
 		touches = new JCheckBox("Touches");
 		compRate = new JCheckBox("Completion Rate");
@@ -175,9 +175,9 @@ public class PositionPicker extends JPanel
 		
 		//add each checkbox to arrayList
 		checkBoxes = new ArrayList<JCheckBox>();
-		checkBoxes.add(rushTDs);
-		checkBoxes.add(rushYards);
-		checkBoxes.add(passYards);
+		//checkBoxes.add(rushTDs);
+		//checkBoxes.add(rushYards);
+		//checkBoxes.add(passYards);
 		checkBoxes.add(gamesPlayed);
 		checkBoxes.add(targets);
 		checkBoxes.add(receptions);
@@ -190,7 +190,7 @@ public class PositionPicker extends JPanel
 		checkBoxes.add(ffppg);
 		checkBoxes.add(completions);
 		checkBoxes.add(passAttempts);
-		checkBoxes.add(passTDs);
+		//checkBoxes.add(passTDs);
 		checkBoxes.add(intThrown);
 		checkBoxes.add(touches);
 		checkBoxes.add(compRate);
@@ -208,15 +208,16 @@ public class PositionPicker extends JPanel
 		checkBoxes.add(kickReturns);
 		checkBoxes.add(turnoversForced);
 		checkBoxes.add(yardsAllowedPG);
+		checkBoxes.add(catchRate);
 		
 		//create QB stat box (use as default)
 		statBox.setBorder(BorderFactory.createTitledBorder("QB Stats"));
 		statBox.add(gamesPlayed);
-		statBox.add(passYards);
-		statBox.add(rushYards);
+		//statBox.add(passYards);
+		//statBox.add(rushYards);
 		statBox.add(totalYards);
-		statBox.add(passTDs);
-		statBox.add(rushTDs);
+		//statBox.add(passTDs);
+		//statBox.add(rushTDs);
 		statBox.add(tdTotal);
 		statBox.add(completions);
 		statBox.add(passAttempts);
@@ -249,7 +250,7 @@ public class PositionPicker extends JPanel
 		goBox.add(goButton);
 		goBox.add(Box.createRigidArea(new Dimension(10,0)));
 		
-		//test photo
+		//create test photo
 		Icon image = new ImageIcon("ff.jpg");
 		JLabel label = new JLabel(image);
 		JLabel label2 = new JLabel(image);
@@ -307,7 +308,7 @@ public class PositionPicker extends JPanel
 	
 	/**
 	 * 
-	 * This class is the item listener for the checkboxes. This will feed information into the query to be executed.
+	 * This class is the item listener for the dropdown menu for seasons. 
 	 *
 	 */
 	class DropMenuListener implements ActionListener
@@ -316,10 +317,11 @@ public class PositionPicker extends JPanel
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			season = dropMenu.getSelectedItem().toString();
+			//if the selection is a year, print it out and disable the selection menu
 			if (isNumeric(season)){
-			System.out.println(season);
-			dropMenu.setEnabled(false);
-			frame.validate();
+				System.out.println(season);
+				dropMenu.setEnabled(false);
+				frame.validate();
 			}
 		}
 	}
@@ -343,20 +345,29 @@ public class PositionPicker extends JPanel
 	
 	/**
 	 * 
-	 * This class is the action listener for the Go! button, which will execute the query and clear the checkboxes
+	 * This class is the action listener for the Go! button, which will execute the query, clear the checkboxes, and set the season dropdown menu to "Season"
 	 *
 	 */
 	class RunButtonListener implements ActionListener
 	{
 		public void actionPerformed(ActionEvent e)
 		{
-			for (JCheckBox obj: checkBoxes)
-			{
-				obj.setSelected(false);
-				obj.setEnabled(true);
+			//display error message if season isn't selected
+			if (dropMenu.getSelectedIndex() == 0){
+				JOptionPane.showMessageDialog(null, "You must select a season!");
 			}
-			dropMenu.setEnabled(true);
-			frame.validate();
+////		//THIS IS WHERE QUERY MUST BE EXECUTED!!!
+			else{
+				for (JCheckBox obj: checkBoxes)
+				{
+					obj.setSelected(false);
+					obj.setEnabled(true);
+				}
+				dropMenu.setEnabled(true);
+				//set the menu selection back to "Season"
+				dropMenu.setSelectedIndex(0);
+				frame.validate();
+			}
 		}
 	}
 	
@@ -390,11 +401,11 @@ public class PositionPicker extends JPanel
 				//create QB stat box
 				statBox.setBorder(BorderFactory.createTitledBorder("QB Stats"));
 				statBox.add(gamesPlayed);
-				statBox.add(passYards);
-				statBox.add(rushYards);
+				//statBox.add(passYards);
+				//statBox.add(rushYards);
 				statBox.add(totalYards);
-				statBox.add(passTDs);
-				statBox.add(rushTDs);
+				//statBox.add(passTDs);
+				//statBox.add(rushTDs);
 				statBox.add(tdTotal);
 				statBox.add(completions);
 				statBox.add(passAttempts);
@@ -602,9 +613,8 @@ public class PositionPicker extends JPanel
 				//create RB stat box
 				statBox.setBorder(BorderFactory.createTitledBorder("RB Stats"));
 				statBox.add(gamesPlayed);
-				statBox.add(rushYards);
-				statBox.add(rushTDs);
-				statBox.add(passYards);
+				//statBox.add(rushYards);
+				//statBox.add(rushTDs);
 				statBox.add(targets);
 				statBox.add(receptions);
 				statBox.add(recYards);
@@ -635,7 +645,7 @@ public class PositionPicker extends JPanel
 		frame.add(new PositionPicker());
 		frame.pack();
 		frame.setVisible(true);
-		frame.setTitle("Upper Deck: Taking Fantasy Football To The Next Level");
+		frame.setTitle("UpperDeck: Taking Fantasy Football To The Next Level");
 		frame.setResizable(false);
 	}
 	
